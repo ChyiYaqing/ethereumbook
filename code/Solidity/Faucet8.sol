@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 
 // Version of Solidity compiler this program was written for
-pragma solidity ^0.6.4;
+pragma solidity ^0.8.20;
 
 contract Owned {
     address payable owner;
 
     // Contract constructor: set owner
     constructor() public {
-        owner = msg.sender;
+        owner = payable(msg.sender);
     }
 
     // Access control modifier
@@ -26,11 +26,14 @@ contract Mortal is Owned {
 }
 
 contract Faucet is Mortal {
+    // 事件 用于记录任何提款
     event Withdrawal(address indexed to, uint amount);
+    // 事件 用于记录任何存款
     event Deposit(address indexed from, uint amount);
 
     // Accept any incoming amount
     receive() external payable {
+        // 使用emit 关键字将事件数据合并到事务日志中
         emit Deposit(msg.sender, msg.value);
     }
 
@@ -44,8 +47,11 @@ contract Faucet is Mortal {
             "Insufficient balance in faucet for withdrawal request"
         );
 
+        // Convert msg.sender to an address payable
+        address payable recipient = payable(msg.sender);
+
         // Send the amount to the address that requested it
-        msg.sender.transfer(withdraw_amount);
+        recipient.transfer(withdraw_amount);
 
         emit Withdrawal(msg.sender, withdraw_amount);
     }
